@@ -5,7 +5,7 @@ from order import Order
 from messages.new_order_message import NewOrderMessage
 from messages.message_serializer import MessageSerializer
 
-promptText = 'Enter order (asset currency orderType amount price):'
+promptText = 'Enter order (asset currency orderType amount price): '
 
 
 class ExchangeClient:
@@ -30,8 +30,8 @@ class ExchangeClient:
             print('ERROR: Wrong number of arguments')
         else:
             try:
-                order = Order(*tokens)
-                message = NewOrderMessage(order, self.id, self.reply_queue.method.queue)
+                order = Order(self.id, *tokens)
+                message = NewOrderMessage(order, self.reply_queue.method.queue)
                 serializedMsg = self.serializer.encode(message)
                 print(serializedMsg)
                 self.channel.basic_publish(exchange='', routing_key='', body=serializedMsg)
@@ -40,7 +40,7 @@ class ExchangeClient:
                 print(f'ERROR: {str(e)}')
 
 
-def execute():
+if __name__ == '__main__':
     if len(sys.argv) != 3:
         raise Exception('Must provide client ID and message queue endpoint')
     client = ExchangeClient(sys.argv[1], sys.argv[2])
@@ -48,7 +48,3 @@ def execute():
     while line:
         client.create_order(line)
         line = input(promptText)
-
-
-if __name__ == '__main__':
-    execute()

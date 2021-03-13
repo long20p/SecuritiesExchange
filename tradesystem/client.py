@@ -5,7 +5,7 @@ from order import Order
 from messages.new_order_message import NewOrderMessage
 from messages.message_serializer import MessageSerializer
 
-promptText = 'Enter order (asset currency orderType amount price): '
+promptText = 'Enter order (asset currency orderType orderSide amount price): '
 
 
 class ExchangeClient:
@@ -26,7 +26,7 @@ class ExchangeClient:
 
     def create_order(self, order_info):
         tokens = order_info.split()
-        if len(tokens) != 5:
+        if len(tokens) != 6:
             print('ERROR: Wrong number of arguments')
         else:
             try:

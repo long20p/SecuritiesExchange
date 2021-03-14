@@ -3,9 +3,9 @@ from order_type import OrderType
 
 class OrderNode:
 
-    def __init__(self, order, notfication_queue):
+    def __init__(self, order, notification_queue):
         self.order = order
-        self.notfication_queue = notfication_queue
+        self.notification_queue = notification_queue
         self.next = None
         self.previous = None
 
@@ -27,7 +27,7 @@ class OrderList:
         if opposite_order.order_type is OrderType.limit:
             if not self.can_match_price(self.head.order, opposite_order) or self.head.order.amount != opposite_order.amount:
                 return None
-            else
+            else:
                 matched = self.head
                 self.head = self.head.next
                 return matched

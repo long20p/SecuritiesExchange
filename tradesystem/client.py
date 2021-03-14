@@ -1,6 +1,6 @@
 import pika
 import sys
-from message_bus_info import MessageBusInfo
+from messages.message_bus_info import MessageBusInfo
 from order import Order
 from messages.new_order_message import NewOrderMessage
 from messages.message_serializer import MessageSerializer
@@ -15,8 +15,10 @@ class ExchangeClient:
         self.serializer = MessageSerializer()
         self.connection = pika.BlockingConnection(pika.URLParameters(connectionString))
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue=MessageBusInfo.new_order_queue_name())
-        self.channel.queue_declare(queue=MessageBusInfo.cancel_order_queue_name())
+        self.new_order_queue_name = MessageBusInfo.new_order_queue_name()
+        self.cancel_order_queue_name = MessageBusInfo.cancel_order_queue_name()
+        self.channel.queue_declare(queue=self.new_order_queue_name)
+        self.channel.queue_declare(queue=self.cancel_order_queue_name)
         self.reply_queue = self.channel.queue_declare(queue='', exclusive=True)
         self.channel.basic_consume(queue=self.reply_queue.method.queue,
                                    auto_ack=True, on_message_callback=self.on_notification_received)
@@ -34,10 +36,13 @@ class ExchangeClient:
                 message = NewOrderMessage(order, self.reply_queue.method.queue)
                 serializedMsg = self.serializer.encode(message)
                 print(serializedMsg)
-                self.channel.basic_publish(exchange='', routing_key='', body=serializedMsg)
+                self.channel.basic_publish(exchange='', routing_key=self.new_order_queue_name, body=serializedMsg)
                 print('Order sent')
             except Exception as e:
                 print(f'ERROR: {str(e)}')
+
+    def on_exit(self):
+        self.connection.close()
 
 
 if __name__ == '__main__':
@@ -48,3 +53,4 @@ if __name__ == '__main__':
     while line:
         client.create_order(line)
         line = input(promptText)
+    client.on_exit()

@@ -22,6 +22,8 @@ A simple demonstration of basic components of an exchange. Message queue is used
 
 ## Considerations for improvements
 - Cancel order that hasn't been matched
+- Partially match orders
+- Support Stop order
 - Specify security type: stock, bond, cryto, derivative etc.
 - Currently the trade system only accepts buying/selling securities for fiat currencies. If any kind of transaction is allowed then 2 different order books (buy/sell) can be merged into 1.
 - Examples of possible pairs: stock/fiat, crypto/fiat, crypto/crypto, stock/crypto

@@ -1,13 +1,16 @@
 from order_type import OrderType, OrderSide
 
+order_types = { ot.name:ot.value for ot in OrderType }
+order_sides = { side.name:side.value for side in OrderSide }
+
 class Order:
 
     def __init__(self, client_id, security_id, currency, order_type, order_side, amount, price):
         self.client_id = client_id
         self.security_id = security_id
         self.currency = currency
-        self.order_type = OrderType(int(order_type))
-        self.order_side = OrderSide(int(order_side))
+        self.order_type = OrderType(order_type if isinstance(order_type, int) else order_types[order_type])
+        self.order_side = OrderSide(order_side if isinstance(order_side, int) else order_sides[order_side])
         self.amount = int(amount)
         self.price = float(price)
         self.validate()

@@ -27,7 +27,12 @@ class Exchange:
 
     def new_order_received(self, channel, method, props, body):
         message_dict = json.loads(body)
-        message = NewOrderMessage.toObject(**message_dict)
+        message = None
+        try:
+            message = NewOrderMessage.toObject(**message_dict)
+        except Exception as e:
+            print(f'ERROR: Order {message_dict} is invalid. {str(e)}')
+            return
         order = message.order
         reply_queue_name = message.reply_queue_name
         # check if order can be processed
@@ -52,6 +57,8 @@ class Exchange:
                                                  order.security_id, order.currency, 
                                                  order.amount * matched.order.price, order.amount)
             print(f'Matched orders between {order.client_id} and {matched.order.client_id}')
+        else:
+            print(f'Received order {str(order)}. Added to order book.')
 
     def handle_invalid_order(self, order, reply_queue_name):
         error = 'Insufficent fund to buy' if order.order_side is OrderSide.buy else 'Insufficient assets to sell'

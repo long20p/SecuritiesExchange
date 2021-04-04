@@ -1,11 +1,27 @@
 import pika
 import sys
+import threading
 from messages.message_bus_info import MessageBusInfo
 from order import Order
 from messages.new_order_message import NewOrderMessage
 from messages.message_serializer import MessageSerializer
 
-promptText = 'Enter order (asset currency orderType orderSide amount price): '
+promptText = 'Please start entering order information (asset currency orderType orderSide amount price)'
+
+class ClientReplyThread(threading.Thread):
+
+    def __init__(self, reply_queue, channel):
+        self.channel = channel
+        self.channel.basic_consume(queue=reply_queue,
+                                   auto_ack=True, on_message_callback=self.on_notification_received)
+        super(ClientReplyThread, self).__init__()
+        self.start()
+
+    def run(self):
+        self.channel.start_consuming()
+
+    def on_notification_received(self, channel, method, props, body):
+        print(body)
 
 
 class ExchangeClient:
@@ -20,11 +36,7 @@ class ExchangeClient:
         self.channel.queue_declare(queue=self.new_order_queue_name)
         self.channel.queue_declare(queue=self.cancel_order_queue_name)
         self.reply_queue = self.channel.queue_declare(queue='', exclusive=True)
-        self.channel.basic_consume(queue=self.reply_queue.method.queue,
-                                   auto_ack=True, on_message_callback=self.on_notification_received)
-
-    def on_notification_received(self, channel, method, props, body):
-        print(body)
+        self.reply_thread = ClientReplyThread(self.reply_queue.method.queue, self.channel)
 
     def create_order(self, order_info):
         tokens = order_info.split()
@@ -49,8 +61,9 @@ if __name__ == '__main__':
     if len(sys.argv) != 3:
         raise Exception('Must provide client ID and message queue endpoint')
     client = ExchangeClient(sys.argv[1], sys.argv[2])
-    line = input(promptText)
+    print(promptText)
+    line = input()
     while line:
         client.create_order(line)
-        line = input(promptText)
+        line = input()
     client.on_exit()
